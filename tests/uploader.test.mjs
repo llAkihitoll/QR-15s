@@ -27,7 +27,8 @@ function makeEnv({ endpoint = 'https://script.google.com/macros/s/PRUEBA/exec', 
     },
     fetch: async (url, options) => {
       calls.push({ url, options });
-      const next = queue.shift();
+      let next = queue.shift();
+      if (typeof next === 'function') next = await next(options);
       if (next instanceof Error) throw next;
       return {
         ok: next.status ? next.status < 400 : true,
@@ -119,5 +120,33 @@ test('un código desconocido del servidor no se muestra tal cual', async () => {
 test('sin conexión no intenta enviar', async () => {
   const env = makeEnv({ onLine: false });
   assert.equal(await codeOf(env.uploadPhoto(item())), 'offline');
+  assert.equal(env.calls.length, 0);
+});
+
+test('cancelar durante el envío corta la petición y no reintenta', async () => {
+  const controller = new AbortController();
+  // Petición que no responde hasta que se cancela.
+  const hanging = options => new Promise((resolve, reject) => {
+    options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+    setTimeout(() => controller.abort(), 0);
+  });
+  const env = makeEnv({ responses: [hanging, { body: { ok: true } }] });
+  assert.equal(await codeOf(env.uploadPhoto(item(), { signal: controller.signal })), 'cancelled');
+  assert.equal(env.calls.length, 1);
+});
+
+test('cancelar durante la espera entre reintentos no vuelve a enviar', async () => {
+  const controller = new AbortController();
+  const failThenCancel = () => { controller.abort(); throw new TypeError('Failed to fetch'); };
+  const env = makeEnv({ responses: [failThenCancel, { body: { ok: true } }] });
+  assert.equal(await codeOf(env.uploadPhoto(item(), { signal: controller.signal })), 'cancelled');
+  assert.equal(env.calls.length, 1);
+});
+
+test('con la carga ya cancelada no envía nada', async () => {
+  const controller = new AbortController();
+  controller.abort();
+  const env = makeEnv({ responses: [{ body: { ok: true } }] });
+  assert.equal(await codeOf(env.uploadPhoto(item(), { signal: controller.signal })), 'cancelled');
   assert.equal(env.calls.length, 0);
 });

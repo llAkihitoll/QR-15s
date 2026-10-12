@@ -219,4 +219,5 @@ Estas pruebas **no** sustituyen una prueba real con tu cuenta (paso 6), porque n
 - **Apps Script no conoce la IP del visitante**, así que los límites son globales y no por persona. Una sola persona abusiva podría agotar el cupo diario. Si pasa, puedes subir `MAX_UPLOADS_PER_DAY` o cerrar la ventana de fechas.
 - **El backend no decodifica la imagen completa.** Revisa su firma y su estructura; la decodificación completa la hace el navegador antes de enviar.
 - **El avance se muestra por foto** ("3 de 10"), no en porcentaje de bytes. Medir los bytes obligaría a una comprobación previa de CORS que Apps Script no admite.
+- **Fotos HEIC en Android:** en iPhone, Safari convierte las fotos HEIC a JPEG automáticamente. Pero algunos Android, como Samsung con "Fotos de alta eficiencia" activado, guardan en HEIC y el navegador no las convierte. Esas fotos se rechazan con el mensaje "no es una foto JPG, PNG o WebP". Aceptar HEIC requeriría convertirlas, y se decidió subir las fotos sin modificar.
 - **Concurrencia:** Apps Script admite unas 30 ejecuciones simultáneas. La página sube de 2 en 2 por invitado y reintenta sola si el servidor está ocupado.

@@ -65,6 +65,7 @@
   const uploadBtn = document.getElementById('uploadBtn');
   const addMoreBtn = document.getElementById('addMoreBtn');
   const clearBtn = document.getElementById('clearBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
 
   document.querySelectorAll('[data-limit]').forEach((el) => {
     const key = el.getAttribute('data-limit');
@@ -78,6 +79,7 @@
   let items = [];
   let busy = null;          // null | 'validating' | 'uploading'
   let finished = false;     // hay un resumen de carga visible
+  let uploadController = null; // permite cancelar la carga en curso
   let nextId = 1;
   // Fotos ya guardadas en esta visita: evita volver a subirlas por error.
   const uploadedFingerprints = new Set();
@@ -283,12 +285,15 @@
 
     busy = 'uploading';
     finished = false;
+    uploadController = new AbortController();
+    const { signal } = uploadController;
     hideNotice();
     queue.forEach((item) => { item.status = 'queued'; item.error = null; updateItemEl(item); });
 
     const total = queue.length;
     let completed = 0;
     const showProgress = () => {
+      if (signal.aborted) return;
       setStatus(`Subiendo fotos… ${completed} de ${total}. No cierres esta página.`);
       statusProgress.max = total;
       statusProgress.value = completed;
@@ -297,18 +302,25 @@
     showProgress();
     render();
 
-    const results = { done: 0, failed: 0, codes: {} };
+    const results = { done: 0, failed: 0, cancelled: false, codes: {} };
     const worker = async () => {
-      while (queue.length) {
+      while (queue.length && !signal.aborted) {
         const item = queue.shift();
         item.status = 'uploading';
         updateItemEl(item);
         try {
-          await uploadPhoto(item);
+          await uploadPhoto(item, { signal });
           item.status = 'done';
           uploadedFingerprints.add(item.fingerprint);
           results.done++;
         } catch (err) {
+          if (err && err.code === 'cancelled') {
+            // Vuelve a la lista con la misma clave: si ya había llegado
+            // al servidor, al subirla de nuevo no se duplica.
+            item.status = 'ready';
+            updateItemEl(item);
+            continue;
+          }
           const code = (err && err.code && UPLOAD_ERRORS[err.code]) ? err.code : 'unknown';
           item.status = 'failed';
           item.error = code;
@@ -323,6 +335,12 @@
     const workers = Math.max(1, Math.min(CONFIG.concurrency, total));
     await Promise.all(Array.from({ length: workers }, worker));
 
+    // Las que no llegaron a empezar también vuelven a la lista.
+    if (signal.aborted) {
+      results.cancelled = true;
+      queue.forEach((item) => { item.status = 'ready'; });
+    }
+    uploadController = null;
     busy = null;
     finished = true;
     statusProgress.hidden = true;
@@ -330,7 +348,22 @@
     render();
   }
 
-  function showSummary({ done, failed, codes }, total) {
+  function cancelUpload() {
+    if (!uploadController || uploadController.signal.aborted) return;
+    uploadController.abort();
+    cancelBtn.disabled = true;
+    setStatus('Cancelando…');
+  }
+
+  function showSummary({ done, failed, cancelled, codes }, total) {
+    if (cancelled) {
+      const pending = sendableItems().length;
+      const parts = ['Carga cancelada.'];
+      if (done) parts.push(plural(done, 'Se subió 1 foto.', 'Se subieron # fotos.'));
+      if (pending) parts.push(plural(pending, '1 foto quedó sin subir; puedes subirla cuando quieras.', '# fotos quedaron sin subir; puedes subirlas cuando quieras.'));
+      setStatus(parts.join(' '));
+      return;
+    }
     if (!failed) {
       // Incluye las que ya se habían subido antes de un reintento.
       const saved = items.filter(i => i.status === 'done').length;
@@ -440,6 +473,10 @@
     clearBtn.textContent = plural(sendable, 'Quitar la foto', 'Quitar todas');
 
     [uploadBtn, pickBtn, addMoreBtn, clearBtn].forEach((btn) => { btn.disabled = Boolean(busy); });
+
+    // Cancelar es lo único disponible mientras se sube.
+    cancelBtn.hidden = busy !== 'uploading';
+    cancelBtn.disabled = Boolean(uploadController && uploadController.signal.aborted);
     items.forEach(updateItemEl);
   }
 
@@ -454,6 +491,7 @@
   addMoreBtn.addEventListener('click', openPicker);
   uploadBtn.addEventListener('click', startUpload);
   clearBtn.addEventListener('click', clearPending);
+  cancelBtn.addEventListener('click', cancelUpload);
 
   fileInput.addEventListener('change', () => {
     const files = Array.from(fileInput.files || []);
