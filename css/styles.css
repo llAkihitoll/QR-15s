@@ -1,0 +1,420 @@
+/* Tokens, capas, marco, píldoras y tipografía copiados de la invitación
+   de XV años (Inv15s/css/styles.css) para que esta página se vea como
+   una pantalla más de ella. Lo nuevo está agrupado más abajo, en
+   "Carga de fotos". */
+
+:root {
+  --ink: #2f4a34;
+  --ink-soft: #3f5c42;
+  --cream: #f7efe6;
+  --backdrop: #ffffff;
+  --pill: #b9cfa5;
+  --pill-hover: #a9c290;
+  --pill-ink: #24401f;
+  --shadow: 0 24px 70px rgba(41, 58, 39, 0.35);
+  --script: 'Parisienne', cursive;
+  --serif: 'Parisienne', cursive;
+  /* Tono malva tomado de las flores de EsquinasFlorales2.png, para
+     errores: se distingue del verde de éxito sin salir de la paleta. */
+  --error: #8a3b57;
+  /* Alto real de la tarjeta (ver .invitation): sirve para reservar el
+     espacio de las flores al final del contenido desplazable. */
+  --card-w: min(100vw, 640px, calc(94dvh * 1240 / 1748));
+  --card-h: calc(var(--card-w) * 1748 / 1240);
+}
+
+* { box-sizing: border-box; }
+
+/* Los botones con display propio (.pill) no deben ignorar [hidden]. */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--backdrop);
+  font-family: var(--serif);
+  color: var(--ink);
+}
+
+.backdrop {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0px, 3vh, 32px) 0;
+  background: var(--backdrop);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.invitation {
+  /* Mismo cálculo que la invitación: la tarjeta conserva la proporción
+     1240:1748 de los recursos, así nunca se estiran ni se recortan. */
+  position: relative;
+  z-index: 1;
+  width: var(--card-w);
+  aspect-ratio: 1240 / 1748;
+  background: var(--cream);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  container-type: inline-size;
+}
+
+/* Teléfonos: tarjeta de borde a borde, como en la invitación. */
+@media (max-width: 640px) {
+  :root { --card-h: 100dvh; }
+  .backdrop { padding: 0; }
+  .invitation {
+    width: 100vw;
+    height: 100dvh;
+    aspect-ratio: auto;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* ---------- Capas ---------- */
+
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Encima del marco (z-index 1), como en la invitación. El contenido
+   también usa z-index 2 pero va después en el HTML, así que sigue por
+   encima de las flores al desplazarse. */
+.layer--flowers { transform: translateY(5.9%); z-index: 2; }
+
+.frame-border {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  border-style: solid;
+  border-color: rgba(63, 92, 66, 0.55);
+}
+.frame-border--outer {
+  inset: 1.3% 0.8%;
+  border-width: 3px;
+}
+.frame-border--inner {
+  inset: 9cqw;
+  border-width: 1.5px;
+}
+
+/* ---------- Tipografía ---------- */
+
+.script-xl { font-family: var(--script); font-size: 11cqw; line-height: 1; margin: 0; color: var(--ink); font-weight: normal; }
+.script-lg { font-family: var(--script); font-size: 6.2cqw; line-height: 1; margin: 0; color: var(--ink-soft); }
+
+.message-text {
+  font-family: var(--script);
+  font-size: 5.6cqw;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 46em;
+  margin: 0;
+}
+.message-text--sm { font-size: 4.8cqw; }
+
+/* ---------- Botones ---------- */
+
+.next-link,
+.pill {
+  font-family: var(--script);
+  font-size: 4.6cqw;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: var(--ink);
+}
+
+.next-link {
+  text-decoration: underline;
+  text-underline-offset: .3em;
+  padding: 1cqw;
+}
+.next-link:hover { color: var(--ink-soft); }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pill);
+  color: var(--pill-ink);
+  border-radius: 999px;
+  padding: 2.6cqw 6cqw;
+  min-width: 42cqw;
+  box-shadow: 0 4px 10px rgba(36, 64, 31, 0.18);
+  transition: background .2s ease, transform .15s ease;
+}
+.pill:hover { background: var(--pill-hover); transform: translateY(-1px); }
+.pill--wide { min-width: 64cqw; }
+
+/* =====================================================================
+   Carga de fotos
+   ===================================================================== */
+
+/* El contenido ocupa el marco interior y es lo único que se desplaza:
+   fondo, flores y marco quedan fijos detrás, igual que en la invitación. */
+.content {
+  position: absolute;
+  inset: calc(9cqw + 1.5px);
+  z-index: 2;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4cqw;
+  /* Arriba y a los lados, respiro respecto al marco; abajo, el espacio
+     que ocupan los ramos de EsquinasFlorales2.png, para que en reposo
+     nada quede debajo de ellos. */
+  padding: 6cqw 4cqw calc(var(--card-h) * 0.16);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(63, 92, 66, .45) transparent;
+}
+
+/* Sin fotos, el bloque de bienvenida se centra en la tarjeta. */
+.content.is-empty { justify-content: center; }
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3cqw;
+}
+.intro .script-xl { font-size: 10cqw; }
+
+.limits-note {
+  font-family: var(--script);
+  font-size: max(16px, 4cqw);
+  line-height: 1.4;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* Al haber fotos se oculta el párrafo largo para dejar sitio a la
+   selección; los límites siguen visibles. */
+.content:not(.is-empty) #instructions { display: none; }
+.content:not(.is-empty) .intro .script-xl { font-size: 8.5cqw; }
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.4cqw;
+  width: 100%;
+}
+.actions .next-link { font-size: max(17px, 5cqw); }
+.actions .pill { font-size: max(18px, 5.4cqw); min-height: 44px; }
+
+button:disabled,
+button:disabled:hover {
+  cursor: not-allowed;
+  opacity: .5;
+  transform: none;
+}
+.pill:disabled:hover { background: var(--pill); }
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Estado y avisos ---------- */
+
+.status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2cqw;
+  width: 100%;
+}
+/* La región de estado nunca se oculta con display:none: los lectores de
+   pantalla solo anuncian cambios en regiones vivas que ya existen. */
+.status-text:empty { display: none; }
+
+.status-text {
+  font-family: var(--script);
+  font-size: max(18px, 5.4cqw);
+  line-height: 1.35;
+  color: var(--ink);
+  margin: 0;
+}
+.status-text.is-error { color: var(--error); }
+
+.status-progress {
+  width: 70%;
+  height: 8px;
+  border: none;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .7);
+  accent-color: var(--ink-soft);
+}
+.status-progress::-webkit-progress-bar { background: rgba(255, 255, 255, .7); border-radius: 999px; }
+.status-progress::-webkit-progress-value { background: var(--ink-soft); border-radius: 999px; }
+.status-progress::-moz-progress-bar { background: var(--ink-soft); border-radius: 999px; }
+
+.notice {
+  width: 100%;
+  background: rgba(255, 255, 255, .6);
+  border: 1.5px solid rgba(138, 59, 87, .45);
+  border-radius: 10px;
+  padding: 3cqw 4cqw;
+  text-align: left;
+}
+.notice[hidden] { display: none; }
+.notice-title {
+  font-family: var(--script);
+  font-size: max(17px, 4.8cqw);
+  color: var(--error);
+  margin: 0 0 1.5cqw;
+}
+.notice-list {
+  margin: 0;
+  padding-left: 1.2em;
+  font-family: var(--script);
+  font-size: max(16px, 4.2cqw);
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Vistas previas ---------- */
+
+.photo-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+  gap: 4cqw 3cqw;
+}
+.photo-grid:empty { display: none; }
+
+.photo-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1cqw;
+  min-width: 0;
+}
+
+/* Mismo marco blanco con sombra que .photo-frame de la invitación. */
+.photo-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 3px solid #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .25);
+  background: rgba(255, 255, 255, .5);
+}
+.photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-name {
+  font-family: var(--script);
+  font-size: max(16px, 4cqw);
+  line-height: 1.25;
+  color: var(--ink);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.photo-meta {
+  font-family: var(--script);
+  font-size: max(15px, 3.6cqw);
+  line-height: 1.2;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.photo-item.is-failed .photo-meta { color: var(--error); }
+
+/* Botón para quitar: mismo estilo que .back-chevron de la invitación. */
+.photo-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .8);
+  color: var(--ink);
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
+}
+.photo-remove:hover { background: #fff; }
+.photo-remove svg { width: 16px; height: 16px; }
+
+/* Indicador sobre la miniatura mientras sube / al terminar. */
+.photo-badge {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(247, 239, 230, .55);
+  color: var(--ink);
+}
+.photo-badge svg { width: 38%; height: 38%; }
+.photo-item.is-queued .photo-badge,
+.photo-item.is-uploading .photo-badge,
+.photo-item.is-done .photo-badge,
+.photo-item.is-failed .photo-badge { display: flex; }
+.photo-item.is-done .photo-badge { background: rgba(185, 207, 165, .55); }
+.photo-item.is-failed .photo-badge { background: rgba(138, 59, 87, .25); color: var(--error); }
+.photo-badge .icon { display: none; }
+.photo-item.is-uploading .icon--spinner,
+.photo-item.is-done .icon--done,
+.photo-item.is-failed .icon--failed { display: block; }
+
+.icon--spinner {
+  border-radius: 50%;
+  border: 3px solid rgba(63, 92, 66, .25);
+  border-top-color: var(--ink-soft);
+  width: 30% !important;
+  height: auto !important;
+  aspect-ratio: 1;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .icon--spinner { animation-duration: 3s; }
+  .pill { transition: none; }
+}
