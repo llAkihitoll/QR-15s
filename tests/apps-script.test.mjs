@@ -10,7 +10,7 @@ const NOW = new Date('2026-11-21T20:00:00-06:00');
 // Los objetos creados dentro de vm tienen otro prototipo; se comparan como JSON.
 const plain = v => JSON.parse(JSON.stringify(v));
 
-function makeEnv(props = {}, { driveError = null } = {}) {
+function makeEnv(props = {}, { driveError = null, storageLimit = 15 * 1024 ** 3, storageUsed = 2 * 1024 ** 3, sharing = 'PRIVATE' } = {}) {
   const cache = new Map();
   const files = [];
   const logs = [];
@@ -44,12 +44,18 @@ function makeEnv(props = {}, { driveError = null } = {}) {
     Session: { getScriptTimeZone: () => 'America/Guatemala' },
     DriveApp: {
       Access: { ANYONE: 'ANYONE', ANYONE_WITH_LINK: 'ANYONE_WITH_LINK', PRIVATE: 'PRIVATE' },
+      getStorageLimit: () => storageLimit,
+      getStorageUsed: () => storageUsed,
       getFolderById: (id) => {
         if (state.driveError) throw new Error(state.driveError);
         if (id !== 'carpeta-123') throw new Error('No item with the given ID could be found');
         return {
-          createFile: (blob) => {
-            const file = { ...blob, description: null, setDescription(d) { this.description = d; } };
+          getName: () => '15s de Mariana',
+          getSharingAccess: () => sharing,
+          createFile: (blob, content, mimeType) => {
+            const file = typeof blob === 'string'
+              ? { name: blob, content, type: mimeType, trashed: false, setTrashed(t) { this.trashed = t; } }
+              : { ...blob, description: null, setDescription(d) { this.description = d; } };
             files.push(file);
             return file;
           }
@@ -216,4 +222,25 @@ test('un error de Drive no revela detalles y permite reintentar', () => {
 test('doGet responde un JSON simple sin datos internos', () => {
   const env = makeEnv();
   assert.equal(env.ctx.doGet().text, '{"ok":true}');
+});
+
+test('checkSetup confirma la escritura, deja la prueba en la papelera e informa el espacio libre', () => {
+  const env = makeEnv();
+  env.ctx.checkSetup();
+  assert.equal(env.files.length, 1);
+  assert.equal(env.files[0].trashed, true);
+  assert.ok(env.logs.some(l => l.startsWith('Todo listo') && l.includes('15s de Mariana')));
+  assert.ok(env.logs.some(l => l === 'Espacio libre en Google Drive: 13.0 GB.'));
+});
+
+test('checkSetup avisa si queda poco espacio o si la carpeta es pública', () => {
+  const env = makeEnv({}, { storageUsed: 13 * 1024 ** 3, sharing: 'ANYONE_WITH_LINK' });
+  env.ctx.checkSetup();
+  assert.ok(env.logs.some(l => l.startsWith('ATENCIÓN: Espacio libre en Google Drive: 2.0 GB.')));
+  assert.ok(env.logs.some(l => l.includes('compartida con cualquier persona')));
+});
+
+test('checkSetup falla con un mensaje claro si falta FOLDER_ID', () => {
+  const env = makeEnv({ FOLDER_ID: '' });
+  assert.throws(() => env.ctx.checkSetup(), /FOLDER_ID/);
 });

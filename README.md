@@ -69,6 +69,7 @@ El script también crea automáticamente la propiedad `COUNTER_DAY`, que es el c
 3. En el **Registro de ejecución** debe aparecer: `Todo listo: el script puede guardar fotos en la carpeta "…"`.
    - La función crea un archivo de prueba en la carpeta y lo manda a la papelera; así confirma que tiene permiso de escritura.
    - Si la carpeta estuviera compartida con "cualquier persona con el enlace", también verás un aviso. No es necesario compartirla.
+   - También muestra el **espacio libre en Google Drive** y avisa si quedan menos de 5 GB. Una cuenta gratuita tiene 15 GB compartidos con Gmail y Google Fotos. Si se llena durante la fiesta, las fotos dejan de guardarse.
 
 **Sobre el permiso que se pide:** el script solicita acceso a Google Drive (`auth/drive`) porque necesita escribir en una carpeta que ya existe. Ese permiso queda dentro de Google y solo lo usa este script. La página y los invitados nunca reciben tokens ni credenciales.
 
@@ -99,6 +100,63 @@ El script también crea automáticamente la propiedad `COUNTER_DAY`, que es el c
 3. El nombre original queda en la **descripción** del archivo (en Drive: clic derecho → Información del archivo → Detalles).
 
 Si algo falla, revisa **Ejecuciones** en el panel izquierdo de Apps Script. Ahí se registran los errores con detalle; la página solo muestra mensajes generales.
+
+## Publicar en GitHub Pages
+
+1. En GitHub, abre el repositorio `QR-15s` → **Settings → Pages**.
+2. En **Build and deployment**:
+   - **Source:** *Deploy from a branch*.
+   - **Branch:** `master` y carpeta `/ (root)`.
+   - Pulsa **Save**.
+3. Espera uno o dos minutos. La página queda en:
+
+   **`https://llakihitoll.github.io/QR-15s/`**
+
+   Sigue el mismo patrón que las invitaciones (`https://llakihitoll.github.io/InvitacionMariana15s_Familiar/`). Confírmalo en la parte superior de **Settings → Pages**, donde GitHub muestra la URL real. Si configuras un dominio propio, la URL será otra.
+4. Abre esa URL y sube una foto de prueba (paso 6 de arriba).
+
+Notas:
+
+- **No hace falta compilar nada.** GitHub Pages sirve los archivos tal cual. El archivo vacío `.nojekyll` evita que GitHub los procese con Jekyll.
+- **Retraso al publicar cambios:** GitHub Pages guarda los archivos en caché hasta unos 10 minutos. Tras un `push`, si no ves el cambio, espera y recarga.
+- **Archivos visibles:** GitHub Pages publica todos los archivos del repositorio. Ninguno contiene credenciales; el ID de la carpeta está solo en Apps Script.
+- **Buscadores:** la página lleva `noindex`, así que no aparecerá en Google.
+
+## Código QR
+
+Genera el QR **después** de que la URL de GitHub Pages abra la página correctamente.
+
+1. **Usa la URL exacta:** `https://llakihitoll.github.io/QR-15s/`, con `https://` y la `/` final. Así la página abre directamente, sin redirecciones.
+2. **Usa un QR estático**, que lleve la URL dentro del propio código. Evita los generadores de "QR dinámico" o con acortador propio: muchos dejan de funcionar al terminar un periodo de prueba o redirigen a publicidad.
+3. **Formato para imprimir:**
+   - Exporta en PNG grande (1000 px o más) o en SVG.
+   - Usa un color oscuro sobre fondo claro. El verde `#2f4a34` de la invitación sobre blanco funciona bien; no lo inviertas (claro sobre oscuro).
+   - Deja el margen blanco alrededor ("zona tranquila").
+   - Elige corrección de errores **M** o **Q**.
+   - Imprímelo de 3 cm × 3 cm como mínimo, o más grande si se escaneará desde lejos (por ejemplo, en un letrero).
+4. **Pruébalo antes de imprimir** con la cámara de un iPhone y de un Android. Debe abrir directamente "Comparte tus fotos".
+
+## Antes del evento
+
+- [ ] `checkSetup` muestra "Todo listo" y suficiente espacio libre en Drive.
+- [ ] La carpeta sigue **privada** (Compartir → Acceso general → Restringido).
+- [ ] Están definidas `UPLOADS_OPEN_FROM` y `UPLOADS_OPEN_UNTIL`, por ejemplo del `2026-11-21T00:00:00-06:00` al `2026-11-30T23:59:59-06:00`, para que la página no acepte fotos fuera de esas fechas.
+- [ ] `MAX_FILE_MB` (Apps Script) y `maxFileBytes` (`js/config.js`) tienen el mismo valor (25 MB).
+- [ ] La implementación de Apps Script usa la última versión de `Code.gs` (ver "Actualizar el backend").
+- [ ] Desde un celular **con datos móviles** (sin Wi-Fi), escanear el QR y subir 2 o 3 fotos. Probar en iPhone y en Android.
+- [ ] Borrar de la carpeta las fotos de prueba.
+- [ ] Probar el QR ya impreso.
+
+Durante y después del evento, **Ejecuciones** en Apps Script muestra cada envío y los errores, si los hay.
+
+## Actualizar
+
+- **Página** (`index.html`, `css/`, `js/`): `commit` y `push` a `master`. GitHub Pages publica sola en uno o dos minutos.
+- **Backend** (`apps-script/Code.gs`): GitHub **no** actualiza Apps Script. Hay que:
+  1. Pegar el nuevo `Code.gs` completo en el editor de Apps Script y guardar.
+  2. Ir a **Implementar → Gestionar implementaciones → ✏️ Editar → Versión: Nueva versión → Implementar**.
+
+  La URL `/exec` no cambia, así que el QR sigue sirviendo. El QR apunta a la página de GitHub Pages, no a Apps Script; cambiar el backend nunca obliga a reimprimirlo.
 
 ## Ejecutar en local
 

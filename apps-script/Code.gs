@@ -4,10 +4,10 @@
  * Se publica como aplicación web de Google Apps Script que se ejecuta con
  * la cuenta de quien la despliega: recibe una foto por petición desde la
  * página (GitHub Pages) y la guarda en la carpeta de Google Drive indicada
- * en las Propiedades del script. Los visitantes nunca reciben acceso a la
- * carpeta ni a sus archivos.
+ * en las Propiedades de secuencia de comandos. Los visitantes nunca reciben
+ * acceso a la carpeta ni a sus archivos.
  *
- * Propiedades del script (Configuración del proyecto → Propiedades del script):
+ * Configuración del proyecto → Propiedades de secuencia de comandos:
  *   FOLDER_ID               (obligatoria) ID de la carpeta de destino.
  *   MAX_FILE_MB             Tamaño máximo por foto. Predeterminado: 25. Máximo: 30.
  *   MAX_UPLOADS_PER_MINUTE  Fotos por minuto (todas las personas). Predeterminado: 120.
@@ -43,6 +43,7 @@ var BASE64_PATTERN = /^[A-Za-z0-9+\/]*={0,2}$/;
 var DONE_TTL_SECONDS = 21600;  // 6 h, el máximo de CacheService
 var PENDING_TTL_SECONDS = 600;
 var LOCK_WAIT_MS = 10000;
+var MIN_FREE_GB = 5;  // checkSetup avisa si queda menos espacio en Drive
 
 // ---------- Puntos de entrada ----------
 
@@ -80,6 +81,20 @@ function checkSetup() {
   }
   console.log('Todo listo: el script puede guardar fotos en la carpeta "' + folder.getName() + '". ' +
     'Límite por foto: ' + config.maxFileMb + ' MB.');
+
+  // Si el Drive se llena durante el evento, las fotos dejan de guardarse.
+  var limit = DriveApp.getStorageLimit();
+  var used = DriveApp.getStorageUsed();
+  if (limit > 0) {
+    var freeGb = (limit - used) / Math.pow(1024, 3);
+    var message = 'Espacio libre en Google Drive: ' + freeGb.toFixed(1) + ' GB.';
+    if (freeGb < MIN_FREE_GB) {
+      console.warn('ATENCIÓN: ' + message + ' Puede no alcanzar para las fotos del evento ' +
+        '(como referencia, 100 invitados con 20 fotos de 5 MB son unos 10 GB).');
+    } else {
+      console.log(message);
+    }
+  }
 }
 
 // ---------- Carga ----------
