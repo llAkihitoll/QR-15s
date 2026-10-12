@@ -7,7 +7,9 @@ window.QR15_CONFIG = {
   uploadEndpoint: '',
 
   // Deben coincidir con los límites configurados en el backend.
-  maxFileBytes: 20 * 1024 * 1024,   // 20 MB por foto
+  // 25 MB por foto. En base64 son ~34 MB por petición, dentro del
+  // límite de ~50 MB de Google Apps Script (el máximo prudente es 30 MB).
+  maxFileBytes: 25 * 1024 * 1024,
   maxFiles: 30,                     // fotos por envío
   maxTotalBytes: 300 * 1024 * 1024, // 300 MB por envío
 
