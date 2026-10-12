@@ -1,0 +1,8 @@
+{
+  "name": "qr-15s",
+  "private": true,
+  "description": "Página para que los invitados suban fotos de los XV años de Mariana a Google Drive",
+  "scripts": {
+    "test": "node --test"
+  }
+}

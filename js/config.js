@@ -2,11 +2,13 @@
 // de la carpeta de Google Drive: esos datos viven solo en el backend.
 window.QR15_CONFIG = {
   // URL de la aplicación web de Google Apps Script que recibe las fotos
-  // (se configura en la Fase 3). Vacía = la carga está deshabilitada y la
-  // página lo indica; nunca se simula una carga exitosa.
-  uploadEndpoint: '',
+  // (termina en /exec; ver README, "Configurar Google Drive"). Es pública
+  // por naturaleza: no es una credencial. Vacía = la carga está
+  // deshabilitada y la página lo indica; nunca se simula una carga exitosa.
+  uploadEndpoint: 'https://script.google.com/macros/s/AKfycbzzKjtMbbR88IpPE8hgGnHbtS2ZZdkD9DgpLZOT9b26RKlJcE-awm-ne5mwwSLV4tI/exec',
 
-  // Deben coincidir con los límites configurados en el backend.
+  // Deben coincidir con los límites del backend (MAX_FILE_MB en las
+  // Propiedades del script de Apps Script).
   // 25 MB por foto. En base64 son ~34 MB por petición, dentro del
   // límite de ~50 MB de Google Apps Script (el máximo prudente es 30 MB).
   maxFileBytes: 25 * 1024 * 1024,

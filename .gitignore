@@ -1,0 +1,11 @@
+# Credenciales y configuración local: nunca al repositorio.
+.env
+.env.*
+.clasprc.json
+*.pem
+*credentials*.json
+*service-account*.json
+
+node_modules/
+.DS_Store
+Thumbs.db
