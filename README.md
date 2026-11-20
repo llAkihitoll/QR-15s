@@ -199,7 +199,7 @@ Estas pruebas **no** sustituyen una prueba real con tu cuenta (paso 6), porque n
 |---|---|---|
 | Formatos | JPEG, PNG y WebP, reconocidos por el contenido del archivo. La imagen se abre para comprobar que es válida. | JPEG, PNG y WebP, reconocidos por la firma y la estructura del archivo. La extensión guardada es la del tipo real. |
 | Tamaño por foto | 25 MB (`maxFileBytes`) | 25 MB (`MAX_FILE_MB`, máximo 30) |
-| Fotos por envío | 30 (`maxFiles`) | Se sube una foto por petición. |
+| Fotos por envío | 10 (`maxFiles`) | Se sube una foto por petición. |
 | Total por envío | 300 MB (`maxTotalBytes`) | — |
 | Frecuencia | — | 120 por minuto y 3000 por día, entre todos los invitados. |
 | Duplicados | No permite elegir dos veces la misma foto, ni volver a subir una ya subida en la misma visita. | Cada foto lleva una clave única. Los reintentos con la misma clave no se guardan dos veces (durante 6 h). |
